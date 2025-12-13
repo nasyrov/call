@@ -1,0 +1,21 @@
+api_key: devkey
+api_secret: secret
+ws_url: ws://livekit:7880
+insecure: true
+
+redis:
+  address: redis:6379
+
+s3:
+  access_key: minioadmin
+  secret: minioadmin
+  bucket: recordings
+  endpoint: http://minio:9000
+  region: us-east-1
+  force_path_style: true
+
+file_output:
+  disallow_local: true
+
+templates:
+  base: https://recorder.livekit.io
