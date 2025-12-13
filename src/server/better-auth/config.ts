@@ -9,8 +9,18 @@ export const auth = betterAuth({
     provider: "pg",
     usePlural: true,
   }),
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60, // 5 minutes
+    },
+  },
   emailAndPassword: {
     enabled: true,
+    sendResetPassword: async ({ user, url }) => {
+      // TODO: Configure actual email sending
+      console.log(`Password reset link for ${user.email}: ${url}`);
+    },
   },
   advanced: {
     useSecureCookies: env.NODE_ENV === "production",
