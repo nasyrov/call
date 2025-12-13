@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { QueryProvider } from "~/components/providers/query-provider";
 import {
   SidebarInset,
   SidebarProvider,
@@ -20,7 +21,7 @@ export default async function DashboardLayout({
   }
 
   return (
-    <>
+    <QueryProvider>
       <Toaster position="top-center" />
       <SidebarProvider>
         <AppSidebar />
@@ -32,6 +33,6 @@ export default async function DashboardLayout({
           <main className="flex-1 p-4">{children}</main>
         </SidebarInset>
       </SidebarProvider>
-    </>
+    </QueryProvider>
   );
 }
