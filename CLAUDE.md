@@ -42,6 +42,8 @@ Next.js 15 app using T3 Stack pattern with App Router, Better Auth, Drizzle ORM,
 
 **`(dashboard)`** - Protected pages (dynamic)
 - `/` - Dashboard home (protected by middleware + server-side session check)
+- `/account/settings` - User account settings (profile, password, sessions, delete account)
+- Each page follows same colocated `_components/` and `_validation/` pattern as auth pages
 
 ### Authentication Flow
 
@@ -54,8 +56,10 @@ Next.js 15 app using T3 Stack pattern with App Router, Better Auth, Drizzle ORM,
 ### UI Components
 
 shadcn/ui components in `src/components/ui/`. Key patterns:
-- Forms: `Form`, `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormMessage`
-- Alerts: `Alert` with `variant="destructive"` for errors, icons from lucide-react
+- Forms: `Form`, `FormField`, `FormItem`, `FormLabel`, `FormControl`, `FormMessage` - wrap entire `Card` in `Form` component
+- Cards: Use `CardFooter` with `justify-end` for action buttons
+- Toast: Use `sonner` for success/error feedback (`toast.success()`, `toast.error()`)
+- Dialogs: Use `Dialog` for destructive action confirmations
 - Theming: next-themes with `ThemeProvider` in root layout, all colors use semantic tokens
 
 ### Database
