@@ -8,12 +8,10 @@ import { createMeetingSchema } from "../_validation/create-meeting-schema";
 export const createMeeting = authenticatedProcedure
   .input(createMeetingSchema)
   .handler(async ({ ctx, input }) => {
-    const title = input.title ?? `${ctx.user.name}'s Meeting`;
-
     const [meeting] = await db
       .insert(meetings)
       .values({
-        title,
+        title: input.title,
         ownerId: ctx.user.id,
         status: "active",
         startedAt: new Date(),
