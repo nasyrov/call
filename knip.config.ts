@@ -6,6 +6,7 @@ const config: KnipConfig = {
     "src/components/ui/**",
     "src/server/db/schema/auth.ts",
     "src/server/better-auth/**",
+    "agent/**",
   ],
 };
 

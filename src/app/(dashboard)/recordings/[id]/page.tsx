@@ -25,6 +25,7 @@ import {
 } from "~/hooks/use-server-action";
 import { deleteRecording } from "./_actions/delete-recording";
 import { getRecordingUrl } from "./_actions/get-signed-url";
+import { Transcript } from "./_components/transcript";
 import { VideoPlayer } from "./_components/video-player";
 
 export default function RecordingPlaybackPage() {
@@ -128,6 +129,10 @@ export default function RecordingPlaybackPage() {
           {(data.duration % 60).toString().padStart(2, "0")}
         </p>
       )}
+
+      <div className="mx-auto max-w-4xl">
+        <Transcript recordingId={params.id} />
+      </div>
     </div>
   );
 }

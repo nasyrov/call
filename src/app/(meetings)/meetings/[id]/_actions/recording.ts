@@ -11,7 +11,7 @@ import { z } from "zod";
 import { env } from "~/env";
 import { db } from "~/server/db";
 import { meetings, recordings } from "~/server/db/schema";
-import { egressClient } from "~/server/livekit";
+import { agentDispatchClient, egressClient } from "~/server/livekit";
 import { authenticatedProcedure } from "~/server/procedures";
 
 const meetingIdSchema = z.object({
@@ -63,6 +63,18 @@ export const startRecording = authenticatedProcedure
       egressId: egress.egressId,
       status: "recording",
     });
+
+    // Dispatch transcription agent to join the room
+    try {
+      await agentDispatchClient.createDispatch(
+        meeting.id,
+        "transcription-agent",
+      );
+      console.log(`Transcription agent dispatched for meeting: ${meeting.id}`);
+    } catch (error) {
+      console.error("Failed to dispatch transcription agent:", error);
+      // Don't fail the recording if transcription dispatch fails
+    }
 
     return { egressId: egress.egressId };
   });
