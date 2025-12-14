@@ -1,5 +1,6 @@
 import { relations, sql } from "drizzle-orm";
 import {
+  boolean,
   index,
   pgEnum,
   pgTable,
@@ -30,10 +31,10 @@ export const meetings = pgTable(
       .default(sql`gen_random_uuid()`)
       .primaryKey(),
     title: text("title").notNull(),
-    externalId: text("external_id").unique().notNull(),
     ownerId: uuid("owner_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    isPersonalRoom: boolean("is_personal_room").default(false).notNull(),
     scheduledAt: timestamp("scheduled_at"),
     startedAt: timestamp("started_at"),
     endedAt: timestamp("ended_at"),

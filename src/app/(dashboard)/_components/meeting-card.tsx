@@ -29,6 +29,7 @@ interface MeetingCardProps {
     image: string | null;
   };
   participants: Participant[];
+  href?: string;
 }
 
 function formatDate(date: Date) {
@@ -48,38 +49,46 @@ function formatTime(date: Date) {
 }
 
 export function MeetingCard({
-  id,
   title,
   scheduledAt,
   endedAt,
   owner,
   participants,
+  href,
 }: MeetingCardProps) {
-  const allUsers = [owner, ...participants.map((p) => p.user)];
+  // Filter out owner from participants to avoid duplicates
+  const otherParticipants = participants
+    .map((p) => p.user)
+    .filter((u) => u.id !== owner.id);
+  const allUsers = [owner, ...otherParticipants];
   const displayDate = endedAt ?? scheduledAt;
 
-  return (
-    <Link href={`/meetings/${id}`}>
-      <Card className="hover:bg-muted/50 transition-colors">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">{title}</CardTitle>
-          {displayDate && (
-            <CardDescription className="flex items-center gap-4">
-              <span className="flex items-center gap-1.5">
-                <Calendar className="size-3.5" />
-                {formatDate(displayDate)}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="size-3.5" />
-                {formatTime(displayDate)}
-              </span>
-            </CardDescription>
-          )}
-        </CardHeader>
-        <CardContent>
-          <AvatarStack users={allUsers} />
-        </CardContent>
-      </Card>
-    </Link>
+  const cardContent = (
+    <Card className={href ? "hover:bg-muted/50 transition-colors" : ""}>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg">{title}</CardTitle>
+        {displayDate && (
+          <CardDescription className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5">
+              <Calendar className="size-3.5" />
+              {formatDate(displayDate)}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Clock className="size-3.5" />
+              {formatTime(displayDate)}
+            </span>
+          </CardDescription>
+        )}
+      </CardHeader>
+      <CardContent>
+        <AvatarStack users={allUsers} />
+      </CardContent>
+    </Card>
   );
+
+  if (href) {
+    return <Link href={href}>{cardContent}</Link>;
+  }
+
+  return cardContent;
 }

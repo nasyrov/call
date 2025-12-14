@@ -59,6 +59,7 @@ export function RecordingsList() {
           meetingTitle={recording.meeting.title}
           duration={recording.duration}
           createdAt={recording.createdAt}
+          status={recording.status}
         />
       ))}
     </div>

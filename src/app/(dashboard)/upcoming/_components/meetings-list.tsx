@@ -58,6 +58,7 @@ export function MeetingsList() {
           scheduledAt={meeting.scheduledAt}
           owner={meeting.owner}
           participants={meeting.participants}
+          href={`/meetings/${meeting.id}/lobby`}
         />
       ))}
     </div>

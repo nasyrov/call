@@ -23,6 +23,7 @@ export const env = createEnv({
 
     // S3-compatible storage (MinIO)
     S3_ENDPOINT: z.string().url(),
+    S3_INTERNAL_ENDPOINT: z.string().url(), // For egress service (Docker network)
     S3_ACCESS_KEY: z.string().min(1),
     S3_SECRET_KEY: z.string().min(1),
     S3_BUCKET: z.string().min(1),
@@ -55,6 +56,7 @@ export const env = createEnv({
 
     // S3
     S3_ENDPOINT: process.env.S3_ENDPOINT,
+    S3_INTERNAL_ENDPOINT: process.env.S3_INTERNAL_ENDPOINT,
     S3_ACCESS_KEY: process.env.S3_ACCESS_KEY,
     S3_SECRET_KEY: process.env.S3_SECRET_KEY,
     S3_BUCKET: process.env.S3_BUCKET,

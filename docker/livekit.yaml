@@ -24,3 +24,8 @@ room:
   auto_create: true
   empty_timeout: 300
   max_participants: 50
+
+webhook:
+  urls:
+    - http://host.docker.internal:3000/api/livekit/egress
+  api_key: devkey
