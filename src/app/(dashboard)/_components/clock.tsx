@@ -10,7 +10,7 @@ export function Clock() {
 
     const interval = setInterval(() => {
       setTime(new Date());
-    }, 1000);
+    }, 60000);
 
     return () => clearInterval(interval);
   }, []);
@@ -18,7 +18,7 @@ export function Clock() {
   if (!time) {
     return (
       <div className="space-y-1">
-        <div className="text-7xl font-bold tracking-tight">--:--:--</div>
+        <div className="text-7xl font-bold tracking-tight">--:--</div>
         <div className="text-muted-foreground text-lg">Loading...</div>
       </div>
     );
@@ -27,7 +27,6 @@ export function Clock() {
   const timeString = time.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit",
     hour12: true,
   });
 

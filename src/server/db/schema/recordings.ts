@@ -39,7 +39,10 @@ export const recordings = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => [index("recordings_meeting_id_idx").on(table.meetingId)],
+  (table) => [
+    index("recordings_meeting_id_idx").on(table.meetingId),
+    index("recordings_created_at_idx").on(table.createdAt),
+  ],
 );
 
 export const recordingsRelations = relations(recordings, ({ one }) => ({

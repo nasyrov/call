@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { Calendar } from "lucide-react";
 
+import { PaginationControls } from "~/components/pagination-controls";
 import {
   Empty,
   EmptyDescription,
@@ -25,16 +27,18 @@ function MeetingsListSkeleton() {
 }
 
 export function MeetingsList() {
+  const [page, setPage] = useState(1);
+
   const { data, isPending } = useServerActionQuery(getUpcomingMeetings, {
-    queryKey: ["upcoming-meetings"],
-    input: undefined,
+    queryKey: ["upcoming-meetings", page],
+    input: { page, limit: 9 },
   });
 
   if (isPending) {
     return <MeetingsListSkeleton />;
   }
 
-  if (!data || data.length === 0) {
+  if (!data || data.data.length === 0) {
     return (
       <Empty>
         <EmptyHeader>
@@ -49,18 +53,26 @@ export function MeetingsList() {
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {data.map((meeting) => (
-        <MeetingCard
-          key={meeting.id}
-          id={meeting.id}
-          title={meeting.title}
-          scheduledAt={meeting.scheduledAt}
-          owner={meeting.owner}
-          participants={meeting.participants}
-          href={`/meetings/${meeting.id}/lobby`}
-        />
-      ))}
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {data.data.map((meeting) => (
+          <MeetingCard
+            key={meeting.id}
+            id={meeting.id}
+            title={meeting.title}
+            scheduledAt={meeting.scheduledAt}
+            participants={meeting.participants}
+            href={`/meetings/${meeting.id}/lobby`}
+          />
+        ))}
+      </div>
+      <PaginationControls
+        page={data.pagination.page}
+        totalPages={data.pagination.totalPages}
+        hasNextPage={data.pagination.hasNextPage}
+        hasPreviousPage={data.pagination.hasPreviousPage}
+        onPageChange={setPage}
+      />
     </div>
   );
 }
