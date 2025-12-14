@@ -11,11 +11,9 @@ import {
 import { AvatarStack } from "./avatar-stack";
 
 interface Participant {
-  user: {
-    id: string;
-    name: string;
-    image: string | null;
-  };
+  id: string;
+  name: string;
+  image: string | null;
 }
 
 interface MeetingCardProps {
@@ -23,11 +21,6 @@ interface MeetingCardProps {
   title: string;
   scheduledAt: Date | null;
   endedAt?: Date | null;
-  owner: {
-    id: string;
-    name: string;
-    image: string | null;
-  };
   participants: Participant[];
   href?: string;
 }
@@ -52,15 +45,9 @@ export function MeetingCard({
   title,
   scheduledAt,
   endedAt,
-  owner,
   participants,
   href,
 }: MeetingCardProps) {
-  // Filter out owner from participants to avoid duplicates
-  const otherParticipants = participants
-    .map((p) => p.user)
-    .filter((u) => u.id !== owner.id);
-  const allUsers = [owner, ...otherParticipants];
   const displayDate = endedAt ?? scheduledAt;
 
   const cardContent = (
@@ -81,7 +68,7 @@ export function MeetingCard({
         )}
       </CardHeader>
       <CardContent>
-        <AvatarStack users={allUsers} />
+        <AvatarStack users={participants} />
       </CardContent>
     </Card>
   );

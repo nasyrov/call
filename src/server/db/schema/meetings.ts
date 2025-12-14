@@ -46,8 +46,11 @@ export const meetings = pgTable(
       .notNull(),
   },
   (table) => [
-    index("meetings_owner_id_idx").on(table.ownerId),
-    index("meetings_status_idx").on(table.status),
+    index("meetings_status_scheduled_at_idx").on(
+      table.status,
+      table.scheduledAt,
+    ),
+    index("meetings_status_ended_at_idx").on(table.status, table.endedAt),
   ],
 );
 

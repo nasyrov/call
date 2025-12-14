@@ -1,38 +1,60 @@
 "use server";
 
-import { and, eq, gt } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 
+import {
+  createPaginatedResult,
+  getOffset,
+  paginationSchema,
+} from "~/lib/pagination";
 import { db } from "~/server/db";
-import { meetings } from "~/server/db/schema";
+import { meetingParticipants, meetings, users } from "~/server/db/schema";
 import { authenticatedProcedure } from "~/server/procedures";
 
-export const getUpcomingMeetings = authenticatedProcedure.handler(
-  async ({ ctx }) => {
-    const now = new Date();
+export const getUpcomingMeetings = authenticatedProcedure
+  .input(paginationSchema)
+  .handler(async ({ ctx, input }) => {
+    const offset = getOffset(input.page, input.limit);
 
-    const result = await db.query.meetings.findMany({
-      where: and(
-        eq(meetings.status, "scheduled"),
-        gt(meetings.scheduledAt, now),
-      ),
-      with: {
-        owner: {
-          columns: { id: true, name: true, image: true },
-        },
-        participants: {
-          with: {
-            user: {
-              columns: { id: true, name: true, image: true },
-            },
-          },
-        },
-      },
-      orderBy: (meetings, { asc }) => [asc(meetings.scheduledAt)],
-    });
+    const rows = await db.execute<{
+      id: string;
+      title: string;
+      scheduled_at: string | null;
+      participants: { id: string; name: string; image: string | null }[];
+      total_count: number;
+    }>(sql`
+      SELECT
+        m.id,
+        m.title,
+        m.scheduled_at,
+        COALESCE(
+          json_agg(json_build_object('id', u.id, 'name', u.name, 'image', u.image)),
+          '[]'
+        ) as participants,
+        COUNT(*) OVER() as total_count
+      FROM ${meetings} m
+      INNER JOIN ${meetingParticipants} mp ON m.id = mp.meeting_id
+      INNER JOIN ${users} u ON mp.user_id = u.id
+      WHERE m.status = 'scheduled'
+        AND m.scheduled_at > NOW()
+        AND EXISTS (
+          SELECT 1 FROM ${meetingParticipants} p
+          WHERE p.meeting_id = m.id AND p.user_id = ${ctx.user.id}
+        )
+      GROUP BY m.id
+      ORDER BY m.scheduled_at ASC
+      LIMIT ${input.limit}
+      OFFSET ${offset}
+    `);
 
-    // Filter to meetings where user is a participant (owner is always a participant)
-    return result.filter((m) =>
-      m.participants.some((p) => p.user.id === ctx.user.id),
-    );
-  },
-);
+    const totalCount = rows[0]?.total_count ?? 0;
+
+    const data = rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      scheduledAt: row.scheduled_at ? new Date(row.scheduled_at) : null,
+      participants: row.participants,
+    }));
+
+    return createPaginatedResult(data, totalCount, input.page, input.limit);
+  });

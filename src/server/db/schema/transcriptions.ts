@@ -35,7 +35,7 @@ export const transcriptions = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => [index("transcriptions_meeting_id_idx").on(table.meetingId)],
+  () => [],
 );
 
 export const transcriptSegments = pgTable(
@@ -55,8 +55,10 @@ export const transcriptSegments = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
-    index("transcript_segments_transcription_id_idx").on(table.transcriptionId),
-    index("transcript_segments_start_time_idx").on(table.startTime),
+    index("transcript_segments_transcription_start_idx").on(
+      table.transcriptionId,
+      table.startTime,
+    ),
   ],
 );
 
