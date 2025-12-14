@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { getCookieCache } from "better-auth/cookies";
+import { getSessionCookie } from "better-auth/cookies";
 
 const authRoutes = [
   "/login",
@@ -9,8 +9,8 @@ const authRoutes = [
   "/password/reset",
 ];
 
-export async function middleware(request: NextRequest) {
-  const session = await getCookieCache(request);
+export function middleware(request: NextRequest) {
+  const session = getSessionCookie(request);
   const { pathname } = request.nextUrl;
 
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
