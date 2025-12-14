@@ -85,7 +85,7 @@ export function NewMeetingDialog({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Meeting Title (optional)</FormLabel>
+                  <FormLabel>Meeting Title</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="My Meeting"

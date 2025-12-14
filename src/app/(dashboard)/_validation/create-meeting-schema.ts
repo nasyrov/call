@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const createMeetingSchema = z.object({
-  title: z.string().max(100).optional(),
+  title: z.string().min(1, "Title is required").max(100),
 });
 
 export type CreateMeetingFormValues = z.infer<typeof createMeetingSchema>;
