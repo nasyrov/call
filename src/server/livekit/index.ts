@@ -1,9 +1,20 @@
-import { AccessToken, EgressClient } from "livekit-server-sdk";
+import {
+  AccessToken,
+  AgentDispatchClient,
+  EgressClient,
+} from "livekit-server-sdk";
 
 import { env } from "~/env";
 
 // Egress Client for recording management
 export const egressClient = new EgressClient(
+  env.LIVEKIT_URL,
+  env.LIVEKIT_API_KEY,
+  env.LIVEKIT_API_SECRET,
+);
+
+// Agent Dispatch Client for transcription agent
+export const agentDispatchClient = new AgentDispatchClient(
   env.LIVEKIT_URL,
   env.LIVEKIT_API_KEY,
   env.LIVEKIT_API_SECRET,
