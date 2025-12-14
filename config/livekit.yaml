@@ -1,0 +1,32 @@
+port: 7880
+bind_addresses:
+  - ""
+
+rtc:
+  tcp_port: 7881
+  udp_port: 7882
+  use_external_ip: true
+
+redis:
+  address: call-redis:6379
+
+keys:
+  API2a5d8cd740617671: m/UQkqpLJ3DEbyenK/HSsmrpvEUwc1KXw4qZO2ZRW1M=
+
+turn:
+  enabled: true
+  udp_port: 3478
+  external_tls: true
+
+logging:
+  level: info
+
+room:
+  auto_create: true
+  empty_timeout: 300
+  max_participants: 50
+
+webhook:
+  urls:
+    - https://voice.zabolin.ru/api/livekit/egress
+  api_key: API2a5d8cd740617671

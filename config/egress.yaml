@@ -1,0 +1,21 @@
+api_key: API2a5d8cd740617671
+api_secret: m/UQkqpLJ3DEbyenK/HSsmrpvEUwc1KXw4qZO2ZRW1M=
+ws_url: ws://call-livekit:7880
+insecure: true
+
+redis:
+  address: call-redis:6379
+
+s3:
+  access_key: minioadmin
+  secret: pXqfh4lGJ2vOY83SwsCbsuIkyFsVUco
+  bucket: recordings
+  endpoint: http://call-minio:9000
+  region: us-east-1
+  force_path_style: true
+
+file_output:
+  disallow_local: true
+
+templates:
+  base: https://recorder.livekit.io

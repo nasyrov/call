@@ -1,0 +1,155 @@
+service: call
+image: nasyrov/call
+
+servers:
+  web:
+    hosts:
+      - 89.23.100.161
+    cmd: node server.js
+
+proxy:
+  ssl: true
+  host: voice.zabolin.ru
+  app_port: 3000
+
+registry:
+  server: ghcr.io
+  username: nasyrov
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+builder:
+  arch: amd64
+  context: .
+
+env:
+  clear:
+    NODE_ENV: production
+    NEXT_PUBLIC_LIVEKIT_URL: wss://voice.zabolin.ru:7880
+    S3_BUCKET: recordings
+    S3_REGION: us-east-1
+  secret:
+    - DATABASE_URL
+    - BETTER_AUTH_SECRET
+    - LIVEKIT_API_KEY
+    - LIVEKIT_API_SECRET
+    - LIVEKIT_URL
+    - S3_ENDPOINT
+    - S3_INTERNAL_ENDPOINT
+    - S3_ACCESS_KEY
+    - S3_SECRET_KEY
+
+accessories:
+  db:
+    image: postgres:17
+    host: 89.23.100.161
+    port: "5432:5432"
+    env:
+      clear:
+        POSTGRES_USER: postgres
+        POSTGRES_DB: call
+      secret:
+        - POSTGRES_PASSWORD
+    directories:
+      - data:/var/lib/postgresql/data
+    options:
+      health-cmd: pg_isready -U postgres
+      health-interval: 5s
+      health-timeout: 5s
+      health-retries: 5
+
+  redis:
+    image: redis:7-alpine
+    host: 89.23.100.161
+    port: "6379:6379"
+    directories:
+      - data:/data
+    options:
+      health-cmd: redis-cli ping
+      health-interval: 5s
+      health-timeout: 5s
+      health-retries: 5
+
+  livekit:
+    image: livekit/livekit-server:latest
+    host: 89.23.100.161
+    files:
+      - config/livekit.yaml:/etc/livekit.yaml
+    cmd: --config /etc/livekit.yaml
+    options:
+      publish:
+        - "7881:7881"
+        - "7882:7882/udp"
+        - "3478:3478/udp"
+
+  caddy:
+    image: caddy:2-alpine
+    host: 89.23.100.161
+    port: "7880:7880"
+    files:
+      - config/Caddyfile:/etc/caddy/Caddyfile
+    directories:
+      - data:/data
+      - config:/config
+      - /root/call-livekit/certs:/certs:ro
+    options:
+      publish:
+        - "9000:9000"
+
+  minio:
+    image: minio/minio:latest
+    host: 89.23.100.161
+    env:
+      secret:
+        - MINIO_ROOT_USER
+        - MINIO_ROOT_PASSWORD
+    directories:
+      - data:/data
+    cmd: server /data --console-address ":9001"
+    options:
+      publish:
+        - "9001:9001"
+      health-cmd: mc ready local
+      health-interval: 5s
+      health-timeout: 5s
+      health-retries: 5
+
+  egress:
+    image: livekit/egress:latest
+    host: 89.23.100.161
+    files:
+      - config/egress.yaml:/etc/egress.yaml
+    env:
+      clear:
+        EGRESS_CONFIG_FILE: /etc/egress.yaml
+    options:
+      cap-add: SYS_ADMIN
+
+  whisper:
+    image: fedirz/faster-whisper-server:latest-cpu
+    host: 89.23.100.161
+    port: "8000:8000"
+    env:
+      clear:
+        WHISPER__MODEL: base
+        WHISPER__DEVICE: cpu
+        WHISPER__COMPUTE_TYPE: int8
+    options:
+      cpus: 2
+      memory: 4g
+      health-cmd: curl -f http://localhost:8000/health
+      health-interval: 30s
+      health-timeout: 10s
+      health-retries: 3
+
+  agent:
+    image: ghcr.io/nasyrov/call-agent:latest
+    host: 89.23.100.161
+    env:
+      clear:
+        LIVEKIT_URL: ws://call-livekit:7880
+        WHISPER_URL: http://call-whisper:8000/v1
+      secret:
+        - LIVEKIT_API_KEY
+        - LIVEKIT_API_SECRET
+        - DATABASE_URL

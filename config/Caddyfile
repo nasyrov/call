@@ -1,0 +1,9 @@
+voice.zabolin.ru:7880 {
+    tls /certs/voice.zabolin.ru.crt /certs/voice.zabolin.ru.key
+    reverse_proxy call-livekit:7880
+}
+
+voice.zabolin.ru:9000 {
+    tls /certs/voice.zabolin.ru.crt /certs/voice.zabolin.ru.key
+    reverse_proxy call-minio:9000
+}

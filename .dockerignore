@@ -1,0 +1,52 @@
+# Dependencies
+node_modules
+agent/node_modules
+
+# Build outputs
+.next
+out
+dist
+build
+agent/dist
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.docker
+
+# Kamal
+.kamal
+
+# Environment
+.env
+.env.*
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+docs
+
+# Tests
+coverage
+__tests__
+*.test.*
+*.spec.*
+
+# Misc
+*.log
+*.pem
+.vercel
+.turbo
