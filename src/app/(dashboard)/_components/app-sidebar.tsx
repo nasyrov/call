@@ -13,9 +13,12 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "~/components/ui/sidebar";
+import { useMeetingDialog } from "./meeting-dialog-provider";
 import { NavMain } from "./nav-main";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { openNewMeeting } = useMeetingDialog();
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -40,11 +43,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Personal Room">
-              <Link href="/room">
-                <Plus />
-                <span>Personal Room</span>
-              </Link>
+            <SidebarMenuButton onClick={openNewMeeting} tooltip="New Meeting">
+              <Plus />
+              <span>New Meeting</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

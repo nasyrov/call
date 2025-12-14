@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 
 import { db } from "~/server/db";
 import { recordings } from "~/server/db/schema";
@@ -8,7 +8,7 @@ import { authenticatedProcedure } from "~/server/procedures";
 
 export const getRecordings = authenticatedProcedure.handler(async ({ ctx }) => {
   const result = await db.query.recordings.findMany({
-    where: eq(recordings.status, "ready"),
+    where: inArray(recordings.status, ["ready", "processing", "recording"]),
     with: {
       meeting: {
         with: {
