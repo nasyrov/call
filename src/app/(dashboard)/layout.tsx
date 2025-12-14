@@ -10,7 +10,7 @@ import { Toaster } from "~/components/ui/sonner";
 import { getSession } from "~/server/better-auth/server";
 import { AppSidebar } from "./_components/app-sidebar";
 import { MeetingDialogProvider } from "./_components/meeting-dialog-provider";
-import { UserMenu } from "./_components/user-menu";
+import { NewMeetingButton } from "./_components/new-meeting-button";
 
 export default async function DashboardLayout({
   children,
@@ -26,11 +26,11 @@ export default async function DashboardLayout({
       <Toaster position="top-center" />
       <MeetingDialogProvider>
         <SidebarProvider>
-          <AppSidebar />
+          <AppSidebar user={session.user} />
           <SidebarInset>
             <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4">
               <SidebarTrigger className="-ml-1" />
-              <UserMenu user={session.user} />
+              <NewMeetingButton />
             </header>
             <main className="flex-1 p-4">{children}</main>
           </SidebarInset>
