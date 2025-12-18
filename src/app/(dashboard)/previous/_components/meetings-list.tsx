@@ -65,6 +65,7 @@ export function MeetingsList() {
             scheduledAt={meeting.scheduledAt}
             endedAt={meeting.endedAt}
             participants={meeting.participants}
+            href={`/meetings/${meeting.id}/recording`}
           />
         ))}
       </div>

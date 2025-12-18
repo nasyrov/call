@@ -40,8 +40,12 @@ ENV S3_ACCESS_KEY=minioadmin
 ENV S3_SECRET_KEY=minioadmin
 ENV S3_BUCKET=recordings
 ENV S3_REGION=us-east-1
+ENV REDIS_HOST=localhost
+ENV REDIS_PORT=6379
+ENV YANDEX_SPEECHKIT_API_KEY=placeholder
+ENV YANDEX_SPEECHKIT_FOLDER_ID=placeholder
 
-RUN pnpm build
+RUN pnpm build && pnpm worker:build
 
 # ---
 FROM base AS runner
@@ -51,6 +55,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Install ffmpeg for audio processing
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
+
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
@@ -59,6 +67,7 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/.next/worker ./.next/worker
 
 USER nextjs
 

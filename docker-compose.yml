@@ -93,47 +93,6 @@ services:
       exit 0;
       "
 
-  whisper:
-    image: fedirz/faster-whisper-server:latest-cpu
-    container_name: call-whisper
-    restart: unless-stopped
-    ports:
-      - "8000:8000"
-    environment:
-      WHISPER__MODEL: base
-      WHISPER__DEVICE: cpu
-      WHISPER__COMPUTE_TYPE: int8
-    deploy:
-      resources:
-        limits:
-          cpus: "8"
-          memory: 8G
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  agent:
-    build:
-      context: ./agent
-      dockerfile: Dockerfile
-    container_name: call-agent
-    restart: unless-stopped
-    environment:
-      LIVEKIT_URL: ws://livekit:7880
-      LIVEKIT_API_KEY: devkey
-      LIVEKIT_API_SECRET: secret
-      WHISPER_URL: http://whisper:8000/v1
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/call
-    depends_on:
-      livekit:
-        condition: service_started
-      whisper:
-        condition: service_started
-      db:
-        condition: service_healthy
-
 volumes:
   postgres_data:
   redis_data:

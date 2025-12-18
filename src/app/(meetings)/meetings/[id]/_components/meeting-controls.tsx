@@ -9,14 +9,12 @@ import {
 } from "@livekit/components-react";
 import {
   Check,
-  Circle,
   Copy,
   LogOut,
   Mic,
   MicOff,
   Monitor,
   PhoneOff,
-  Square,
   Video,
   VideoOff,
 } from "lucide-react";
@@ -25,7 +23,6 @@ import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 import { useServerActionMutation } from "~/hooks/use-server-action";
 import { endMeeting } from "../_actions/end-meeting";
-import { startRecording, stopRecording } from "../_actions/recording";
 
 interface MeetingControlsProps {
   meetingId: string;
@@ -39,33 +36,10 @@ export function MeetingControls({ meetingId, isHost }: MeetingControlsProps) {
   const { buttonProps: disconnectProps } = useDisconnectButton({});
 
   const [copied, setCopied] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
 
   const isMicEnabled = localParticipant?.isMicrophoneEnabled ?? false;
   const isCameraEnabled = localParticipant?.isCameraEnabled ?? false;
   const isScreenSharing = localParticipant?.isScreenShareEnabled ?? false;
-
-  const { mutate: startRec, isPending: isStartingRecording } =
-    useServerActionMutation(startRecording, {
-      onSuccess: () => {
-        setIsRecording(true);
-        toast.success("Recording started");
-      },
-      onError: (error) => {
-        toast.error(error.message ?? "Failed to start recording");
-      },
-    });
-
-  const { mutate: stopRec, isPending: isStoppingRecording } =
-    useServerActionMutation(stopRecording, {
-      onSuccess: () => {
-        setIsRecording(false);
-        toast.success("Recording stopped");
-      },
-      onError: (error) => {
-        toast.error(error.message ?? "Failed to stop recording");
-      },
-    });
 
   const { mutateAsync: endMeetingMutation } = useServerActionMutation(
     endMeeting,
@@ -100,14 +74,6 @@ export function MeetingControls({ meetingId, isHost }: MeetingControlsProps) {
     }
   };
 
-  const handleRecordingToggle = () => {
-    if (isRecording) {
-      stopRec({ meetingId });
-    } else {
-      startRec({ meetingId });
-    }
-  };
-
   const handleLeave = () => {
     disconnectProps.onClick?.({} as React.MouseEvent<HTMLButtonElement>);
     router.push("/");
@@ -126,8 +92,6 @@ export function MeetingControls({ meetingId, isHost }: MeetingControlsProps) {
     toast.success("Meeting link copied");
     setTimeout(() => setCopied(false), 2000);
   };
-
-  const isRecordingPending = isStartingRecording || isStoppingRecording;
 
   return (
     <div className="flex items-center justify-center gap-2 border-t p-4">
@@ -165,22 +129,6 @@ export function MeetingControls({ meetingId, isHost }: MeetingControlsProps) {
       >
         <Monitor className="size-5" />
       </Button>
-
-      {isHost && (
-        <Button
-          variant={isRecording ? "destructive" : "secondary"}
-          size="icon"
-          onClick={handleRecordingToggle}
-          disabled={isRecordingPending}
-          title={isRecording ? "Stop recording" : "Start recording"}
-        >
-          {isRecording ? (
-            <Square className="size-5" />
-          ) : (
-            <Circle className="size-5" />
-          )}
-        </Button>
-      )}
 
       <Button
         variant="secondary"

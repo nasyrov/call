@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Calendar, History, Home, Video } from "lucide-react";
+import { Calendar, History, Home } from "lucide-react";
 
 import {
   SidebarGroup,
@@ -26,11 +26,6 @@ const items = [
     title: "Previous",
     url: "/previous",
     icon: History,
-  },
-  {
-    title: "Recordings",
-    url: "/recordings",
-    icon: Video,
   },
 ];
 

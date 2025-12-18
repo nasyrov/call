@@ -27,5 +27,5 @@ room:
 
 webhook:
   urls:
-    - http://host.docker.internal:3000/api/livekit/egress
+    - http://host.docker.internal:3000/api/livekit/webhook
   api_key: devkey

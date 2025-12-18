@@ -6,6 +6,10 @@ servers:
     hosts:
       - 89.23.100.161
     cmd: node server.js
+  worker:
+    hosts:
+      - 89.23.100.161
+    cmd: node .next/worker/index.js
 
 proxy:
   ssl: true
@@ -28,6 +32,8 @@ env:
     NEXT_PUBLIC_LIVEKIT_URL: wss://voice.zabolin.ru:7880
     S3_BUCKET: recordings
     S3_REGION: us-east-1
+    REDIS_HOST: call-redis
+    REDIS_PORT: 6379
   secret:
     - DATABASE_URL
     - BETTER_AUTH_SECRET
@@ -38,6 +44,8 @@ env:
     - S3_INTERNAL_ENDPOINT
     - S3_ACCESS_KEY
     - S3_SECRET_KEY
+    - YANDEX_SPEECHKIT_API_KEY
+    - YANDEX_SPEECHKIT_FOLDER_ID
 
 accessories:
   db:
@@ -125,31 +133,3 @@ accessories:
     options:
       cap-add: SYS_ADMIN
 
-  whisper:
-    image: fedirz/faster-whisper-server:latest-cpu
-    host: 89.23.100.161
-    port: "8000:8000"
-    env:
-      clear:
-        WHISPER__MODEL: base
-        WHISPER__DEVICE: cpu
-        WHISPER__COMPUTE_TYPE: int8
-    options:
-      cpus: 2
-      memory: 4g
-      health-cmd: curl -f http://localhost:8000/health
-      health-interval: 30s
-      health-timeout: 10s
-      health-retries: 3
-
-  agent:
-    image: ghcr.io/nasyrov/call-agent:latest
-    host: 89.23.100.161
-    env:
-      clear:
-        LIVEKIT_URL: ws://call-livekit:7880
-        WHISPER_URL: http://call-whisper:8000/v1
-      secret:
-        - LIVEKIT_API_KEY
-        - LIVEKIT_API_SECRET
-        - DATABASE_URL

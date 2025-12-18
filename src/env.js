@@ -28,6 +28,14 @@ export const env = createEnv({
     S3_SECRET_KEY: z.string().min(1),
     S3_BUCKET: z.string().min(1),
     S3_REGION: z.string().default("us-east-1"),
+
+    // Redis (for job queue)
+    REDIS_HOST: z.string().default("localhost"),
+    REDIS_PORT: z.coerce.number().default(6379),
+
+    // Yandex SpeechKit
+    YANDEX_SPEECHKIT_API_KEY: z.string().optional(),
+    YANDEX_SPEECHKIT_FOLDER_ID: z.string().optional(),
   },
 
   /**
@@ -61,6 +69,14 @@ export const env = createEnv({
     S3_SECRET_KEY: process.env.S3_SECRET_KEY,
     S3_BUCKET: process.env.S3_BUCKET,
     S3_REGION: process.env.S3_REGION,
+
+    // Redis
+    REDIS_HOST: process.env.REDIS_HOST,
+    REDIS_PORT: process.env.REDIS_PORT,
+
+    // Yandex SpeechKit
+    YANDEX_SPEECHKIT_API_KEY: process.env.YANDEX_SPEECHKIT_API_KEY,
+    YANDEX_SPEECHKIT_FOLDER_ID: process.env.YANDEX_SPEECHKIT_FOLDER_ID,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
