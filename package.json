@@ -10,9 +10,9 @@
   "packageManager": "pnpm@10.19.0",
   "scripts": {
     "build": "next build",
-    "worker:build": "tsup src/worker/index.ts --format esm --target node22 --outDir .next/worker --clean",
+    "worker:build": "tsup",
     "worker:dev": "dotenv -e .env -- tsx src/worker/index.ts",
-    "worker:start": "node .next/worker/index.js",
+    "worker:start": "node .next/worker/index.mjs",
     "db:auth": "dotenv -e .env -o -- pnpm dlx @better-auth/cli generate --config ./src/server/better-auth/config.ts --output ./src/server/db/schema/auth.ts -y",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",

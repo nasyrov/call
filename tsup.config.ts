@@ -7,6 +7,8 @@ export default defineConfig({
   outDir: ".next/worker",
   clean: true,
   sourcemap: true,
+  // Output as .mjs to ensure Node.js treats it as ESM
+  outExtension: () => ({ js: ".mjs" }),
   // Handle path aliases
   esbuildOptions(options) {
     options.alias = {
