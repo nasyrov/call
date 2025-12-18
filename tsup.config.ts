@@ -9,6 +9,8 @@ export default defineConfig({
   sourcemap: true,
   // Output as .mjs to ensure Node.js treats it as ESM
   outExtension: () => ({ js: ".mjs" }),
+  // Bundle all dependencies for standalone execution
+  noExternal: [/.*/],
   // Handle path aliases
   esbuildOptions(options) {
     options.alias = {
