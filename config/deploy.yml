@@ -9,7 +9,7 @@ servers:
   worker:
     hosts:
       - 89.23.100.161
-    cmd: node .next/worker/index.mjs
+    cmd: node .next/worker/index.cjs
     proxy: false
 
 proxy:
