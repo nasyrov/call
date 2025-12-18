@@ -33,6 +33,7 @@ ENV DATABASE_URL=postgresql://postgres:postgres@localhost:5432/call
 ENV LIVEKIT_API_KEY=devkey
 ENV LIVEKIT_API_SECRET=secret
 ENV LIVEKIT_URL=ws://localhost:7880
+ENV LIVEKIT_INTERNAL_URL=http://localhost:7880
 ENV NEXT_PUBLIC_LIVEKIT_URL=wss://voice.zabolin.ru:7880
 ENV S3_ENDPOINT=http://localhost:9000
 ENV S3_INTERNAL_ENDPOINT=http://localhost:9000
@@ -42,8 +43,8 @@ ENV S3_BUCKET=recordings
 ENV S3_REGION=us-east-1
 ENV REDIS_HOST=localhost
 ENV REDIS_PORT=6379
-ENV YANDEX_SPEECHKIT_API_KEY=placeholder
-ENV YANDEX_SPEECHKIT_FOLDER_ID=placeholder
+ENV YANDEX_API_KEY=placeholder
+ENV YANDEX_FOLDER_ID=placeholder
 
 RUN pnpm build && pnpm worker:build
 

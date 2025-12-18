@@ -4,12 +4,7 @@ import { DirectFileOutput, S3Upload, TrackSource } from "livekit-server-sdk";
 
 import { env } from "~/env";
 import { db } from "~/server/db";
-import {
-  meetings,
-  participantAudioTracks,
-  recordings,
-  users,
-} from "~/server/db/schema";
+import { participantAudioTracks, recordings, users } from "~/server/db/schema";
 import { egressClient } from "~/server/livekit";
 
 export async function handleTrackPublished(event: WebhookEvent) {
@@ -27,28 +22,25 @@ export async function handleTrackPublished(event: WebhookEvent) {
 
   if (!room?.name || !participant || !track) return;
 
+  // Skip egress bot participants (their identity starts with "EG_")
+  if (participant.identity.startsWith("EG_")) {
+    console.log(`Skipping egress bot participant: ${participant.identity}`);
+    return;
+  }
+
   // Only process audio tracks from microphone
   if (track.source !== TrackSource.MICROPHONE) {
     console.log(`Skipping non-microphone track: ${track.source}`);
     return;
   }
 
-  const meeting = await db.query.meetings.findFirst({
-    where: eq(meetings.id, room.name),
-  });
-
-  if (!meeting) {
-    console.log(`Meeting not found for room: ${room.name}`);
-    return;
-  }
-
-  // Find the room composite recording
+  // Check if recording exists for this meeting
   const recording = await db.query.recordings.findFirst({
-    where: eq(recordings.meetingId, meeting.id),
+    where: eq(recordings.meetingId, room.name),
   });
 
   if (!recording) {
-    console.log(`No recording found for meeting: ${meeting.id}`);
+    console.log(`No recording found for meeting: ${room.name}, skipping`);
     return;
   }
 
@@ -62,14 +54,22 @@ export async function handleTrackPublished(event: WebhookEvent) {
 
   if (existingTrack) {
     console.log(
-      `Audio track already exists for participant: ${participant.identity}`,
+      `Audio track already exists for participant: ${participant.identity}, skipping`,
     );
     return;
   }
 
-  // Start track egress for this audio track
-  const filepath = `recordings/${meeting.id}/audio/{publisher_identity}-{time}.ogg`;
+  // Look up participant name from database if not provided
+  let participantName = participant.name || null;
+  if (!participantName) {
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, participant.identity),
+      columns: { name: true },
+    });
+    participantName = user?.name ?? participant.identity;
+  }
 
+  // Start track egress with OGG audio output
   const s3Upload = new S3Upload({
     accessKey: env.S3_ACCESS_KEY,
     secret: env.S3_SECRET_KEY,
@@ -80,27 +80,22 @@ export async function handleTrackPublished(event: WebhookEvent) {
   });
 
   const fileOutput = new DirectFileOutput({
-    filepath,
+    filepath: `recordings/${room.name}/audio/{publisher_identity}-{time}.ogg`,
     output: { case: "s3", value: s3Upload },
   });
 
   try {
+    const startTime = Date.now();
     const egress = await egressClient.startTrackEgress(
       room.name,
       fileOutput,
       track.sid,
     );
+    console.log(
+      `Started track egress for: ${participant.identity} (took ${Date.now() - startTime}ms)`,
+    );
 
-    // Look up participant name from database if not provided by webhook
-    let participantName = participant.name;
-    if (!participantName) {
-      const user = await db.query.users.findFirst({
-        where: eq(users.id, participant.identity),
-        columns: { name: true },
-      });
-      participantName = user?.name ?? participant.identity;
-    }
-
+    // Save audio track record
     await db.insert(participantAudioTracks).values({
       recordingId: recording.id,
       participantIdentity: participant.identity,
@@ -109,13 +104,9 @@ export async function handleTrackPublished(event: WebhookEvent) {
       egressId: egress.egressId,
       status: "recording",
     });
-
-    console.log(
-      `Started audio track egress for participant: ${participant.identity}`,
-    );
   } catch (error) {
     console.error(
-      `Failed to start audio track egress for ${participant.identity}:`,
+      `Failed to start track egress for ${participant.identity}:`,
       error,
     );
   }

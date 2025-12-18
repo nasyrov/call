@@ -99,8 +99,8 @@ export const runPrompt = authenticatedProcedure
       // Call Yandex GPT
       const result = await chat(
         prompt.prompt,
-        `Here is the transcript:\n\n${transcriptText}`,
-        { temperature: 0.3, maxTokens: 2000 },
+        `Вот транскрипт встречи:\n\n${transcriptText}`,
+        { temperature: 0.3, maxTokens: 4000 },
       );
 
       // Update the prompt run with the result

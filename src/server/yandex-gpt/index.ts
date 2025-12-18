@@ -52,6 +52,9 @@ export async function chat(
 
   const { temperature = 0.6, maxTokens = 2000 } = options;
 
+  const russianInstruction =
+    "ВАЖНО: Ты ВСЕГДА отвечаешь ТОЛЬКО на русском языке. Никогда не используй английский язык в своих ответах.";
+
   const request: CompletionRequest = {
     modelUri: `gpt://${env.YANDEX_FOLDER_ID}/yandexgpt-lite`,
     completionOptions: {
@@ -60,8 +63,14 @@ export async function chat(
       maxTokens: String(maxTokens),
     },
     messages: [
-      { role: "system", text: systemPrompt },
-      { role: "user", text: userMessage },
+      {
+        role: "system",
+        text: `${russianInstruction}\n\n${systemPrompt}\n\n${russianInstruction}`,
+      },
+      {
+        role: "user",
+        text: `${userMessage}\n\nОтветь на русском языке.`,
+      },
     ],
   };
 

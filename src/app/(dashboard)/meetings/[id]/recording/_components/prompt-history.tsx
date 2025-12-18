@@ -2,6 +2,7 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { AlertCircle, CheckCircle2, Clock, Loader2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 import {
   Card,
@@ -106,8 +107,8 @@ export function PromptHistory({ runs, isLoading }: PromptHistoryProps) {
               <CollapsibleContent>
                 <div className="border-t px-4 py-3">
                   {run.status === "completed" && run.result && (
-                    <div className="text-sm whitespace-pre-wrap">
-                      {run.result}
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <ReactMarkdown>{run.result}</ReactMarkdown>
                     </div>
                   )}
                   {run.status === "failed" && run.error && (

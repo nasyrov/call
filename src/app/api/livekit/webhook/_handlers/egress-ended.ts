@@ -12,6 +12,10 @@ export async function handleEgressEnded(event: WebhookEvent) {
   const fileResult = egress.fileResults?.[0];
   const isError = !!egress.error;
 
+  if (isError) {
+    console.error(`Egress failed: ${egress.egressId}`, egress.error);
+  }
+
   const updateData = {
     status: isError ? ("failed" as const) : ("ready" as const),
     filePath: fileResult?.filename ?? null,
