@@ -28,5 +28,5 @@ room:
 
 webhook:
   urls:
-    - https://voice.zabolin.ru/api/livekit/egress
+    - https://voice.zabolin.ru/api/livekit/webhook
   api_key: API2a5d8cd740617671
