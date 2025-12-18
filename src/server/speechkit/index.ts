@@ -8,13 +8,13 @@ import { env } from "~/env";
 
 const execAsync = promisify(exec);
 
-export interface TranscriptionSegment {
+interface TranscriptionSegment {
   text: string;
   start: number;
   end: number;
 }
 
-export interface TranscriptionResult {
+interface TranscriptionResult {
   segments: TranscriptionSegment[];
 }
 
@@ -44,8 +44,8 @@ async function convertToMono(inputBuffer: Buffer): Promise<Buffer> {
 export async function transcribeAudio(
   audioBuffer: Buffer,
 ): Promise<TranscriptionResult> {
-  if (!env.YANDEX_SPEECHKIT_API_KEY || !env.YANDEX_SPEECHKIT_FOLDER_ID) {
-    throw new Error("Yandex SpeechKit credentials not configured");
+  if (!env.YANDEX_API_KEY || !env.YANDEX_FOLDER_ID) {
+    throw new Error("Yandex credentials not configured");
   }
 
   // Convert to mono (Yandex processes each channel separately, causing duplicates)
@@ -53,7 +53,7 @@ export async function transcribeAudio(
 
   // Use synchronous recognition API (supports files up to 1MB)
   const params = new URLSearchParams({
-    folderId: env.YANDEX_SPEECHKIT_FOLDER_ID,
+    folderId: env.YANDEX_FOLDER_ID,
     lang: "ru-RU",
     format: "oggopus",
   });
@@ -61,7 +61,7 @@ export async function transcribeAudio(
   const response = await fetch(`${SPEECHKIT_STT_URL}?${params}`, {
     method: "POST",
     headers: {
-      Authorization: `Api-Key ${env.YANDEX_SPEECHKIT_API_KEY}`,
+      Authorization: `Api-Key ${env.YANDEX_API_KEY}`,
       "Content-Type": "application/octet-stream",
     },
     body: new Uint8Array(monoBuffer),

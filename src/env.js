@@ -33,9 +33,9 @@ export const env = createEnv({
     REDIS_HOST: z.string().default("localhost"),
     REDIS_PORT: z.coerce.number().default(6379),
 
-    // Yandex SpeechKit
-    YANDEX_SPEECHKIT_API_KEY: z.string().optional(),
-    YANDEX_SPEECHKIT_FOLDER_ID: z.string().optional(),
+    // Yandex Cloud (SpeechKit + AI Chat)
+    YANDEX_API_KEY: z.string().optional(),
+    YANDEX_FOLDER_ID: z.string().optional(),
   },
 
   /**
@@ -74,9 +74,9 @@ export const env = createEnv({
     REDIS_HOST: process.env.REDIS_HOST,
     REDIS_PORT: process.env.REDIS_PORT,
 
-    // Yandex SpeechKit
-    YANDEX_SPEECHKIT_API_KEY: process.env.YANDEX_SPEECHKIT_API_KEY,
-    YANDEX_SPEECHKIT_FOLDER_ID: process.env.YANDEX_SPEECHKIT_FOLDER_ID,
+    // Yandex Cloud
+    YANDEX_API_KEY: process.env.YANDEX_API_KEY,
+    YANDEX_FOLDER_ID: process.env.YANDEX_FOLDER_ID,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

@@ -26,7 +26,9 @@ import {
 } from "~/hooks/use-server-action";
 import { deleteRecording } from "./_actions/delete-recording";
 import { getMeetingRecording } from "./_actions/get-meeting-recording";
-import { Transcript } from "./_components/transcript";
+import { getPromptRuns } from "./_actions/get-prompt-runs";
+import { PromptForm } from "./_components/prompt-form";
+import { PromptHistory } from "./_components/prompt-history";
 import { VideoPlayer } from "./_components/video-player";
 
 function formatDuration(seconds: number): string {
@@ -53,6 +55,15 @@ export default function MeetingRecordingPage() {
       const status = query.state.data?.recordingStatus;
       return status === "recording" ? 5000 : false;
     },
+  });
+
+  const {
+    data: promptRunsData,
+    isPending: isPromptRunsPending,
+    refetch: refetchPromptRuns,
+  } = useServerActionQuery(getPromptRuns, {
+    queryKey: ["prompt-runs", params.id],
+    input: { meetingId: params.id },
   });
 
   const { mutate: handleDelete, isPending: isDeleting } =
@@ -187,8 +198,16 @@ export default function MeetingRecordingPage() {
       )}
 
       {data?.audioTracks && (
-        <div className="mx-auto max-w-4xl">
-          <Transcript audioTracks={data.audioTracks} />
+        <div className="mx-auto max-w-4xl space-y-6">
+          <PromptForm
+            meetingId={params.id}
+            audioTracks={data.audioTracks}
+            onSuccess={() => refetchPromptRuns()}
+          />
+          <PromptHistory
+            runs={promptRunsData ?? []}
+            isLoading={isPromptRunsPending}
+          />
         </div>
       )}
     </div>
