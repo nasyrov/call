@@ -10,6 +10,7 @@ servers:
     hosts:
       - 89.23.100.161
     cmd: node .next/worker/index.mjs
+    proxy: false
 
 proxy:
   ssl: true
