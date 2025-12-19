@@ -4,9 +4,9 @@ import { WebhookReceiver } from "livekit-server-sdk";
 
 import { env } from "~/env";
 import { handleEgressEnded } from "./_handlers/egress-ended";
-import { handleParticipantJoined } from "./_handlers/participant-joined";
 import { handleRoomFinished } from "./_handlers/room-finished";
 import { handleRoomStarted } from "./_handlers/room-started";
+import { handleTrackPublished } from "./_handlers/track-published";
 
 const receiver = new WebhookReceiver(
   env.LIVEKIT_API_KEY,
@@ -17,7 +17,9 @@ export async function POST(request: NextRequest) {
   const body = await request.text();
   const authHeader = request.headers.get("Authorization");
 
-  console.log(`Webhook received, event type from body: ${(JSON.parse(body) as { event?: string }).event}`);
+  console.log(
+    `Webhook received, event type from body: ${(JSON.parse(body) as { event?: string }).event}`,
+  );
 
   if (!authHeader) {
     console.log("Webhook rejected: no auth header");
@@ -33,8 +35,8 @@ export async function POST(request: NextRequest) {
       case "room_started":
         await handleRoomStarted(event);
         break;
-      case "participant_joined":
-        await handleParticipantJoined(event);
+      case "track_published":
+        await handleTrackPublished(event);
         break;
       case "room_finished":
         await handleRoomFinished(event);

@@ -1,23 +1,38 @@
 import type { WebhookEvent } from "livekit-server-sdk";
 import { and, eq } from "drizzle-orm";
-import { EncodedFileOutput, EncodedFileType, S3Upload } from "livekit-server-sdk";
+import { DirectFileOutput, S3Upload, TrackSource } from "livekit-server-sdk";
 
 import { env } from "~/env";
 import { db } from "~/server/db";
 import { participantAudioTracks, recordings, users } from "~/server/db/schema";
 import { egressClient } from "~/server/livekit";
 
-export async function handleParticipantJoined(event: WebhookEvent) {
+export async function handleTrackPublished(event: WebhookEvent) {
   const room = event.room;
   const participant = event.participant;
+  const track = event.track;
 
-  console.log("participant_joined event:", {
+  console.log("track_published event:", {
     room: room?.name,
     participantIdentity: participant?.identity,
     participantName: participant?.name,
+    trackSid: track?.sid,
+    trackSource: track?.source,
   });
 
-  if (!room?.name || !participant?.identity) return;
+  if (!room?.name || !participant || !track) return;
+
+  // Skip egress bot participants (their identity starts with "EG_")
+  if (participant.identity.startsWith("EG_")) {
+    console.log(`Skipping egress bot participant: ${participant.identity}`);
+    return;
+  }
+
+  // Only process audio tracks from microphone
+  if (track.source !== TrackSource.MICROPHONE) {
+    console.log(`Skipping non-microphone track: ${track.source}`);
+    return;
+  }
 
   // Check if recording exists for this meeting
   const recording = await db.query.recordings.findFirst({
@@ -25,7 +40,7 @@ export async function handleParticipantJoined(event: WebhookEvent) {
   });
 
   if (!recording) {
-    console.log(`No recording found for meeting: ${room.name}, skipping participant egress`);
+    console.log(`No recording found for meeting: ${room.name}, skipping`);
     return;
   }
 
@@ -54,7 +69,7 @@ export async function handleParticipantJoined(event: WebhookEvent) {
     participantName = user?.name ?? participant.identity;
   }
 
-  // Start participant egress with OGG audio output
+  // Start track egress with OGG audio output
   const s3Upload = new S3Upload({
     accessKey: env.S3_ACCESS_KEY,
     secret: env.S3_SECRET_KEY,
@@ -64,21 +79,20 @@ export async function handleParticipantJoined(event: WebhookEvent) {
     forcePathStyle: true,
   });
 
-  const fileOutput = new EncodedFileOutput({
+  const fileOutput = new DirectFileOutput({
     filepath: `recordings/${room.name}/audio/{publisher_identity}-{time}.ogg`,
     output: { case: "s3", value: s3Upload },
-    fileType: EncodedFileType.OGG,
   });
 
   try {
     const startTime = Date.now();
-    const egress = await egressClient.startParticipantEgress(
+    const egress = await egressClient.startTrackEgress(
       room.name,
-      participant.identity,
-      { file: fileOutput },
+      fileOutput,
+      track.sid,
     );
     console.log(
-      `Started participant egress for: ${participant.identity} (took ${Date.now() - startTime}ms)`,
+      `Started track egress for: ${participant.identity} (took ${Date.now() - startTime}ms)`,
     );
 
     // Save audio track record
@@ -86,13 +100,13 @@ export async function handleParticipantJoined(event: WebhookEvent) {
       recordingId: recording.id,
       participantIdentity: participant.identity,
       participantName,
-      trackSid: null, // Participant egress doesn't target a specific track
+      trackSid: track.sid,
       egressId: egress.egressId,
       status: "recording",
     });
   } catch (error) {
     console.error(
-      `Failed to start participant egress for ${participant.identity}:`,
+      `Failed to start track egress for ${participant.identity}:`,
       error,
     );
   }
