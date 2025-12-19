@@ -30,6 +30,7 @@ export async function handleTrackPublished(event: WebhookEvent) {
 
   // START EGRESS IMMEDIATELY - before any DB queries
   // The track may disappear quickly, so we need to start recording ASAP
+  console.log(`Starting track egress for ${track.sid} at ${Date.now()}`);
   const filepath = `recordings/${room.name}/audio/{publisher_identity}-{time}.ogg`;
 
   const s3Upload = new S3Upload({
@@ -48,13 +49,14 @@ export async function handleTrackPublished(event: WebhookEvent) {
 
   let egress;
   try {
+    const startTime = Date.now();
     egress = await egressClient.startTrackEgress(
       room.name,
       fileOutput,
       track.sid,
     );
     console.log(
-      `Started audio track egress for participant: ${participant.identity}`,
+      `Started audio track egress for participant: ${participant.identity} (took ${Date.now() - startTime}ms)`,
     );
   } catch (error) {
     console.error(
