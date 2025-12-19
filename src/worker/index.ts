@@ -11,7 +11,7 @@ import { participantAudioTracks } from "~/server/db/schema";
 import { transcribeAudio } from "~/server/speechkit";
 
 const s3Client = new S3Client({
-  endpoint: env.S3_ENDPOINT,
+  endpoint: env.S3_INTERNAL_ENDPOINT,
   region: env.S3_REGION,
   credentials: {
     accessKeyId: env.S3_ACCESS_KEY,
