@@ -1,5 +1,5 @@
 import { exec } from "child_process";
-import { readFile, unlink, writeFile } from "fs/promises";
+import { readFile, readdir, unlink, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { promisify } from "util";
@@ -21,39 +21,49 @@ interface TranscriptionResult {
 const SPEECHKIT_STT_URL =
   "https://stt.api.cloud.yandex.net/speech/v1/stt:recognize";
 
-async function convertToMono(inputBuffer: Buffer): Promise<Buffer> {
-  const inputPath = join(tmpdir(), `stt-input-${Date.now()}.ogg`);
-  const outputPath = join(tmpdir(), `stt-output-${Date.now()}.ogg`);
+// Yandex sync API limits: 1MB file size, 30 seconds audio
+const CHUNK_DURATION_SECONDS = 25;
+
+async function splitAudioIntoChunks(inputBuffer: Buffer): Promise<Buffer[]> {
+  const timestamp = Date.now();
+  const inputPath = join(tmpdir(), `stt-input-${timestamp}.ogg`);
+  const outputPattern = join(tmpdir(), `stt-chunk-${timestamp}-%03d.ogg`);
 
   try {
     await writeFile(inputPath, inputBuffer);
+
+    // Split into chunks and convert to mono with lower bitrate
     await execAsync(
-      `ffmpeg -i "${inputPath}" -ac 1 -c:a libopus -b:a 48k "${outputPath}" -y -loglevel error`,
+      `ffmpeg -i "${inputPath}" -f segment -segment_time ${CHUNK_DURATION_SECONDS} -ac 1 -c:a libopus -b:a 32k "${outputPattern}" -y -loglevel error`,
     );
-    const outputBuffer = await readFile(outputPath);
-    console.log(
-      `Converted to mono: ${inputBuffer.length} -> ${outputBuffer.length} bytes`,
-    );
-    return outputBuffer;
+
+    // Find all chunk files
+    const files = await readdir(tmpdir());
+    const chunkFiles = files
+      .filter((f) => f.startsWith(`stt-chunk-${timestamp}-`))
+      .sort();
+
+    console.log(`Split audio into ${chunkFiles.length} chunks`);
+
+    // Read all chunks
+    const chunks: Buffer[] = [];
+    for (const file of chunkFiles) {
+      const chunkPath = join(tmpdir(), file);
+      const chunkBuffer = await readFile(chunkPath);
+      console.log(`Chunk ${file}: ${chunkBuffer.length} bytes`);
+      chunks.push(chunkBuffer);
+      await unlink(chunkPath).catch(() => undefined);
+    }
+
+    return chunks;
   } finally {
     await unlink(inputPath).catch(() => undefined);
-    await unlink(outputPath).catch(() => undefined);
   }
 }
 
-export async function transcribeAudio(
-  audioBuffer: Buffer,
-): Promise<TranscriptionResult> {
-  if (!env.YANDEX_API_KEY || !env.YANDEX_FOLDER_ID) {
-    throw new Error("Yandex credentials not configured");
-  }
-
-  // Convert to mono (Yandex processes each channel separately, causing duplicates)
-  const monoBuffer = await convertToMono(audioBuffer);
-
-  // Use synchronous recognition API (supports files up to 1MB)
+async function transcribeChunk(audioBuffer: Buffer): Promise<string> {
   const params = new URLSearchParams({
-    folderId: env.YANDEX_FOLDER_ID,
+    folderId: env.YANDEX_FOLDER_ID!,
     lang: "ru-RU",
     format: "oggopus",
   });
@@ -64,7 +74,7 @@ export async function transcribeAudio(
       Authorization: `Api-Key ${env.YANDEX_API_KEY}`,
       "Content-Type": "application/octet-stream",
     },
-    body: new Uint8Array(monoBuffer),
+    body: new Uint8Array(audioBuffer),
   });
 
   if (!response.ok) {
@@ -73,21 +83,50 @@ export async function transcribeAudio(
   }
 
   const result = (await response.json()) as { result?: string };
+  return result.result ?? "";
+}
 
-  console.log("Yandex SpeechKit raw response:", JSON.stringify(result));
+export async function transcribeAudio(
+  audioBuffer: Buffer,
+): Promise<TranscriptionResult> {
+  if (!env.YANDEX_API_KEY || !env.YANDEX_FOLDER_ID) {
+    throw new Error("Yandex credentials not configured");
+  }
 
-  if (!result.result) {
+  // Split audio into chunks (handles mono conversion too)
+  const chunks = await splitAudioIntoChunks(audioBuffer);
+
+  // Transcribe each chunk
+  const transcriptions: string[] = [];
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i]!;
+
+    // Skip chunks that are too large (shouldn't happen with 25s chunks at 32kbps)
+    if (chunk.length > 1024 * 1024) {
+      console.warn(`Chunk ${i} is too large (${chunk.length} bytes), skipping`);
+      continue;
+    }
+
+    console.log(`Transcribing chunk ${i + 1}/${chunks.length}...`);
+    const text = await transcribeChunk(chunk);
+    if (text) {
+      transcriptions.push(text);
+    }
+  }
+
+  const fullText = transcriptions.join(" ");
+  console.log(`Transcription complete: ${fullText.length} characters`);
+
+  if (!fullText.trim()) {
     return { segments: [] };
   }
 
-  // Synchronous API returns single text result without timing
-  // We'll create a single segment with the full text
   return {
     segments: [
       {
-        text: result.result,
+        text: fullText,
         start: 0,
-        end: 0,
+        end: chunks.length * CHUNK_DURATION_SECONDS,
       },
     ],
   };
