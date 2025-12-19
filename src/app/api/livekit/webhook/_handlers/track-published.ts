@@ -4,12 +4,7 @@ import { DirectFileOutput, S3Upload, TrackSource } from "livekit-server-sdk";
 
 import { env } from "~/env";
 import { db } from "~/server/db";
-import {
-  meetings,
-  participantAudioTracks,
-  recordings,
-  users,
-} from "~/server/db/schema";
+import { participantAudioTracks, recordings, users } from "~/server/db/schema";
 import { egressClient } from "~/server/livekit";
 
 export async function handleTrackPublished(event: WebhookEvent) {
@@ -33,42 +28,9 @@ export async function handleTrackPublished(event: WebhookEvent) {
     return;
   }
 
-  const meeting = await db.query.meetings.findFirst({
-    where: eq(meetings.id, room.name),
-  });
-
-  if (!meeting) {
-    console.log(`Meeting not found for room: ${room.name}`);
-    return;
-  }
-
-  // Find the room composite recording
-  const recording = await db.query.recordings.findFirst({
-    where: eq(recordings.meetingId, meeting.id),
-  });
-
-  if (!recording) {
-    console.log(`No recording found for meeting: ${meeting.id}`);
-    return;
-  }
-
-  // Check if we already have an audio track for this participant
-  const existingTrack = await db.query.participantAudioTracks.findFirst({
-    where: and(
-      eq(participantAudioTracks.recordingId, recording.id),
-      eq(participantAudioTracks.participantIdentity, participant.identity),
-    ),
-  });
-
-  if (existingTrack) {
-    console.log(
-      `Audio track already exists for participant: ${participant.identity}`,
-    );
-    return;
-  }
-
-  // Start track egress for this audio track
-  const filepath = `recordings/${meeting.id}/audio/{publisher_identity}-{time}.ogg`;
+  // START EGRESS IMMEDIATELY - before any DB queries
+  // The track may disappear quickly, so we need to start recording ASAP
+  const filepath = `recordings/${room.name}/audio/{publisher_identity}-{time}.ogg`;
 
   const s3Upload = new S3Upload({
     accessKey: env.S3_ACCESS_KEY,
@@ -84,32 +46,13 @@ export async function handleTrackPublished(event: WebhookEvent) {
     output: { case: "s3", value: s3Upload },
   });
 
+  let egress;
   try {
-    const egress = await egressClient.startTrackEgress(
+    egress = await egressClient.startTrackEgress(
       room.name,
       fileOutput,
       track.sid,
     );
-
-    // Look up participant name from database if not provided by webhook
-    let participantName = participant.name;
-    if (!participantName) {
-      const user = await db.query.users.findFirst({
-        where: eq(users.id, participant.identity),
-        columns: { name: true },
-      });
-      participantName = user?.name ?? participant.identity;
-    }
-
-    await db.insert(participantAudioTracks).values({
-      recordingId: recording.id,
-      participantIdentity: participant.identity,
-      participantName,
-      trackSid: track.sid,
-      egressId: egress.egressId,
-      status: "recording",
-    });
-
     console.log(
       `Started audio track egress for participant: ${participant.identity}`,
     );
@@ -118,5 +61,54 @@ export async function handleTrackPublished(event: WebhookEvent) {
       `Failed to start audio track egress for ${participant.identity}:`,
       error,
     );
+    return;
   }
+
+  // Now do DB operations (egress is already running)
+  const recording = await db.query.recordings.findFirst({
+    where: eq(recordings.meetingId, room.name),
+  });
+
+  if (!recording) {
+    console.log(
+      `No recording found for meeting: ${room.name}, stopping egress`,
+    );
+    await egressClient.stopEgress(egress.egressId).catch(() => undefined);
+    return;
+  }
+
+  // Check if we already have an audio track for this participant
+  const existingTrack = await db.query.participantAudioTracks.findFirst({
+    where: and(
+      eq(participantAudioTracks.recordingId, recording.id),
+      eq(participantAudioTracks.participantIdentity, participant.identity),
+    ),
+  });
+
+  if (existingTrack) {
+    console.log(
+      `Audio track already exists for participant: ${participant.identity}, stopping duplicate egress`,
+    );
+    await egressClient.stopEgress(egress.egressId).catch(() => undefined);
+    return;
+  }
+
+  // Look up participant name from database if not provided by webhook
+  let participantName = participant.name || null;
+  if (!participantName) {
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, participant.identity),
+      columns: { name: true },
+    });
+    participantName = user?.name ?? participant.identity;
+  }
+
+  await db.insert(participantAudioTracks).values({
+    recordingId: recording.id,
+    participantIdentity: participant.identity,
+    participantName,
+    trackSid: track.sid,
+    egressId: egress.egressId,
+    status: "recording",
+  });
 }
