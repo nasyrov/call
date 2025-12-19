@@ -17,7 +17,10 @@ export async function POST(request: NextRequest) {
   const body = await request.text();
   const authHeader = request.headers.get("Authorization");
 
+  console.log(`Webhook received, event type from body: ${(JSON.parse(body) as { event?: string }).event}`);
+
   if (!authHeader) {
+    console.log("Webhook rejected: no auth header");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -45,7 +48,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("Webhook error:", error);
+    console.error("Webhook validation failed:", error);
+    console.error("Body was:", body.substring(0, 500));
     return NextResponse.json({ error: "Invalid webhook" }, { status: 400 });
   }
 }
