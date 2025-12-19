@@ -75,7 +75,7 @@ export const participantAudioTracks = pgTable(
       .references(() => recordings.id, { onDelete: "cascade" }),
     participantIdentity: text("participant_identity").notNull(),
     participantName: text("participant_name").notNull(),
-    trackSid: text("track_sid").notNull(),
+    trackSid: text("track_sid"),
     egressId: text("egress_id").notNull().unique(),
     filePath: text("file_path"),
     fileSize: bigint("file_size", { mode: "number" }),

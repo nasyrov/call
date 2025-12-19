@@ -4,9 +4,9 @@ import { WebhookReceiver } from "livekit-server-sdk";
 
 import { env } from "~/env";
 import { handleEgressEnded } from "./_handlers/egress-ended";
+import { handleParticipantJoined } from "./_handlers/participant-joined";
 import { handleRoomFinished } from "./_handlers/room-finished";
 import { handleRoomStarted } from "./_handlers/room-started";
-import { handleTrackPublished } from "./_handlers/track-published";
 
 const receiver = new WebhookReceiver(
   env.LIVEKIT_API_KEY,
@@ -33,8 +33,8 @@ export async function POST(request: NextRequest) {
       case "room_started":
         await handleRoomStarted(event);
         break;
-      case "track_published":
-        await handleTrackPublished(event);
+      case "participant_joined":
+        await handleParticipantJoined(event);
         break;
       case "room_finished":
         await handleRoomFinished(event);
