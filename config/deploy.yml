@@ -31,6 +31,7 @@ env:
   clear:
     NODE_ENV: production
     NEXT_PUBLIC_LIVEKIT_URL: wss://voice.zabolin.ru:7880
+    LIVEKIT_INTERNAL_URL: http://call-livekit:7880
     S3_BUCKET: recordings
     S3_REGION: us-east-1
     REDIS_HOST: call-redis

@@ -33,6 +33,7 @@ ENV DATABASE_URL=postgresql://postgres:postgres@localhost:5432/call
 ENV LIVEKIT_API_KEY=devkey
 ENV LIVEKIT_API_SECRET=secret
 ENV LIVEKIT_URL=ws://localhost:7880
+ENV LIVEKIT_INTERNAL_URL=http://localhost:7880
 ENV NEXT_PUBLIC_LIVEKIT_URL=wss://voice.zabolin.ru:7880
 ENV S3_ENDPOINT=http://localhost:9000
 ENV S3_INTERNAL_ENDPOINT=http://localhost:9000

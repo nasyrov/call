@@ -2,9 +2,9 @@ import { AccessToken, EgressClient } from "livekit-server-sdk";
 
 import { env } from "~/env";
 
-// Egress Client for recording management
+// Egress Client for recording management (uses internal URL for fast server-to-server calls)
 export const egressClient = new EgressClient(
-  env.LIVEKIT_URL,
+  env.LIVEKIT_INTERNAL_URL,
   env.LIVEKIT_API_KEY,
   env.LIVEKIT_API_SECRET,
 );

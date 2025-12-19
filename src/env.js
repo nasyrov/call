@@ -20,6 +20,7 @@ export const env = createEnv({
     LIVEKIT_API_KEY: z.string().min(1),
     LIVEKIT_API_SECRET: z.string().min(1),
     LIVEKIT_URL: z.string().url(),
+    LIVEKIT_INTERNAL_URL: z.string().url(), // For server-to-server (Docker network)
 
     // S3-compatible storage (MinIO)
     S3_ENDPOINT: z.string().url(),
@@ -60,6 +61,7 @@ export const env = createEnv({
     LIVEKIT_API_KEY: process.env.LIVEKIT_API_KEY,
     LIVEKIT_API_SECRET: process.env.LIVEKIT_API_SECRET,
     LIVEKIT_URL: process.env.LIVEKIT_URL,
+    LIVEKIT_INTERNAL_URL: process.env.LIVEKIT_INTERNAL_URL,
     NEXT_PUBLIC_LIVEKIT_URL: process.env.NEXT_PUBLIC_LIVEKIT_URL,
 
     // S3
