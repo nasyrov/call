@@ -1,5 +1,5 @@
 import { exec } from "child_process";
-import { readFile, readdir, unlink, writeFile } from "fs/promises";
+import { readdir, readFile, unlink, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { promisify } from "util";
