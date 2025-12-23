@@ -29,6 +29,7 @@ import { getMeetingRecording } from "./_actions/get-meeting-recording";
 import { getPromptRuns } from "./_actions/get-prompt-runs";
 import { PromptForm } from "./_components/prompt-form";
 import { PromptHistory } from "./_components/prompt-history";
+import { TranscriptsList } from "./_components/transcripts-list";
 import { VideoPlayer } from "./_components/video-player";
 
 function formatDuration(seconds: number): string {
@@ -199,6 +200,7 @@ export default function MeetingRecordingPage() {
 
       {data?.audioTracks && (
         <div className="mx-auto max-w-4xl space-y-6">
+          <TranscriptsList audioTracks={data.audioTracks} />
           <PromptForm
             meetingId={params.id}
             audioTracks={data.audioTracks}
